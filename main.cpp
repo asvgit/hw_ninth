@@ -8,6 +8,8 @@
 #include <string>
 #include <vector>
 
+#include<range/v3/all.hpp>
+
 typedef std::string string;
 typedef std::vector<string> StringVector;
 typedef std::vector<int> IntVector;

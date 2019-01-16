@@ -1,8 +1,14 @@
 cmake_minimum_required(VERSION 3.2)
 
-project(range VERSION 1.0.$ENV{TRAVIS_BUILD_NUMBER})
+# project(range VERSION 1.0.$ENV{TRAVIS_BUILD_NUMBER})
+project(range)
+
+include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
+conan_basic_setup()
 
 add_executable(range main.cpp)
+
+target_link_libraries(range ${CONAN_LIBS})
 
 set_target_properties(range PROPERTIES
 	CXX_STANDARD 14
