@@ -1,10 +1,4 @@
-#include <cassert>
-#include <cstdlib>
 #include <iostream>
-#include <sstream>
-#include <iterator>
-#include <algorithm>
-#include <memory>
 #include <string>
 #include <vector>
 
@@ -14,25 +8,22 @@ typedef std::string string;
 typedef std::vector<string> StringVector;
 typedef std::vector<int> IntVector;
 
-namespace str {
-
-StringVector split(const string &str, const char d) {
+template<char S = ' '>
+StringVector split(const string &str) {
     StringVector r;
 
     string::size_type start = 0;
-    string::size_type stop = str.find_first_of(d);
+    string::size_type stop = str.find_first_of(S);
     while(stop != string::npos) {
         r.push_back(str.substr(start, stop - start));
 
         start = stop + 1;
-        stop = str.find_first_of(d, start);
+        stop = str.find_first_of(S, start);
     }
 
     r.push_back(str.substr(start));
 
     return r;
-}
-
 }
 
 template<typename T>
@@ -52,18 +43,15 @@ int main() {
 		std::vector<IntVector> ip_pool;
 
 		auto stoi = [](const auto &sv) {
-			IntVector ip(sv.size());
-			std::transform(sv.begin(), sv.end()
-					, ip.begin(), [](auto l) { return std::stoi(l); });
-			return ip;
+			return sv | ranges::view::transform([](const auto &l) { return std::stoi(l); });
 		};
 
 		for(string line ; std::getline(std::cin, line);) {
-			auto v = str::split(line, '\t');
-			ip_pool.push_back(stoi(str::split(v.front(), '.')));
+			const auto ip = split<'\t'>(line).front();
+			ip_pool.push_back(stoi(split<'.'>(ip)));
 		}
 
-		std::sort(ip_pool.begin(), ip_pool.end(), std::greater<IntVector>());
+		ranges::sort(ip_pool, std::greater<IntVector>());
 
 		auto print_ip = [](const auto &ip) {
 			for(const auto &ip_part : ip) {
@@ -74,28 +62,17 @@ int main() {
 			std::cout << std::endl;
 		};
 
-		for(const auto &ip : ip_pool)
-			print_ip(ip);
+		ranges::for_each(ip_pool, print_ip);
 
-		// filter_1 filter_46_70 filter_any_46; 
-		std::vector<IntVector> filters = {{}, {}, {}};
-		int ind = 0;
-		for (const auto &ip : ip_pool) {
-			if (filter(1, ip.front())) {
-				filters[0].push_back(ind);
-			} else if (filter(46, ip[0]) && filter(70, ip[1])) {
-				filters[1].push_back(ind);
-			}
-			if (filter(46, ip[0], ip[1], ip[2], ip[3])) {
-				filters[2].push_back(ind);
-			}
-			++ind;
-		}
-
-		for (const auto &f : filters) {
-			for (const auto &item : f)
-				print_ip(ip_pool[item]);
-		}
+		ranges::for_each(ip_pool
+					| ranges::view::filter([](const auto &ip) {return filter(1, ip.front());})
+				, print_ip);
+		ranges::for_each(ip_pool
+					| ranges::view::filter([](const auto &ip) {return filter(46, ip[0]) && filter(70, ip[1]);})
+				, print_ip);
+		ranges::for_each(ip_pool
+					| ranges::view::filter([](const auto &ip) {return filter(46, ip[0], ip[1], ip[2], ip[3]);})
+				, print_ip);
 	} catch(const std::exception &e) {
 		std::cerr << e.what() << std::endl;
 	}
